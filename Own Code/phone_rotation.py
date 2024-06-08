@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 # Define the path to the data directory
-base_path = "Data_Arthur"
+base_paths = ["Data_Arthur"]#,"Data_Nando"]
 
 
 # Function to process each CSV file
@@ -14,6 +14,15 @@ def process_csv(file_path):
 
     # Rename columns for convenience
     df.columns = ["Time", "Acceleration_x", "Acceleration_y", "Acceleration_z"]
+
+    # Check which axis is aligned with gravity (9.8 m/s^2)
+    mean_acc_y = df["Acceleration_y"].mean()
+    mean_acc_z = df["Acceleration_z"].mean()
+
+    if abs(mean_acc_y - 9.8) < abs(mean_acc_z - 9.8):
+        # If y is closer to 9.8, switch y and z
+        df.rename(columns={"Acceleration_y": "Temp", "Acceleration_z": "Acceleration_y"}, inplace=True)
+        df.rename(columns={"Temp": "Acceleration_z"}, inplace=True)
 
     # Define the time intervals for aggregation (every half second)
     df['Time_interval'] = (df['Time'] // 0.5).astype(int)
@@ -33,16 +42,17 @@ all_mean_values = {}
 all_stdev_values = {}
 
 # Iterate over all folders in the base directory
-for folder in os.listdir(base_path):
-    folder_path = os.path.join(base_path, folder)
-    if os.path.isdir(folder_path):
-        file_path = os.path.join(folder_path, "Accelerometer.csv")
-        if os.path.exists(file_path):
-            mean_values, stdev_values = process_csv(file_path)
+for base_path in base_paths:
+    for folder in os.listdir(base_path):
+        folder_path = os.path.join(base_path, folder)
+        if os.path.isdir(folder_path):
+            file_path = os.path.join(folder_path, "Accelerometer.csv")
+            if os.path.exists(file_path):
+                mean_values, stdev_values = process_csv(file_path)
 
-            # Store results in dictionaries
-            all_mean_values[folder] = mean_values
-            all_stdev_values[folder] = stdev_values
+                # Store results in dictionaries
+                all_mean_values[folder] = mean_values
+                all_stdev_values[folder] = stdev_values
 
 # Print the results
 print("Mean and Standard Deviation of Aggregated Values for Each Folder:\n")
