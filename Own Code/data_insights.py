@@ -213,9 +213,9 @@ def plot_time_series(folder_path, label):
     plt.show()
 
 
-
-# Plot the time series data for auto_1
-plot_time_series(auto_1_path, "auto_1")
-
-# Plot the time series data for auto_horizontaal
-plot_time_series(auto_horizontaal_path, "auto_horizontaal")
+#
+# # Plot the time series data for auto_1
+# plot_time_series(auto_1_path, "auto_1")
+#
+# # Plot the time series data for auto_horizontaal
+# plot_time_series(auto_horizontaal_path, "auto_horizontaal")

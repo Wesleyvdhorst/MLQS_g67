@@ -94,7 +94,8 @@ all_dataframes = {}
 # Dictionary to keep track of the number of instances of each mode of transportation
 mode_counts = {}
 
-# Iterate over all folders in the base directory
+# Assume base_paths, all_mean_values, all_stdev_values, all_dataframes, and mode_counts are defined
+
 for base_path in base_paths:
     for folder in os.listdir(base_path):
         folder_path = os.path.join(base_path, folder)
@@ -115,13 +116,28 @@ for base_path in base_paths:
                 linear_path = None
 
             # Process each CSV file
-            if os.path.exists(accelerometer_path):
-                # Process the Accelerometer.csv file first to determine axis alignment
+            if os.path.exists(accelerometer_path) and linear_path is not None:
+                # Process the Accelerometer.csv file
                 accelerometer_df = pd.read_csv(accelerometer_path)
                 accelerometer_df.columns = ["Time", "Acceleration_x", "Acceleration_y", "Acceleration_z"]
-                median_acc_y = accelerometer_df["Acceleration_y"].median()
-                median_acc_z = accelerometer_df["Acceleration_z"].median()
-                y_aligned_with_gravity = abs(median_acc_y - 9.8) < abs(median_acc_z - 9.8)
+
+                # Process the Linear Accelerometer.csv file
+                linear_acc_df = pd.read_csv(linear_path)
+                linear_acc_df.columns = ["Time", "Linear_x", "Linear_y", "Linear_z"]
+
+                # Ensure both DataFrames have the same time intervals
+                merged_df = pd.merge(accelerometer_df, linear_acc_df, on="Time", suffixes=('', '_linear'))
+
+                # Calculate the difference
+                diff_y = merged_df["Acceleration_y"] - merged_df["Linear_y"]
+                diff_z = merged_df["Acceleration_z"] - merged_df["Linear_z"]
+
+                # Calculate the means
+                mean_diff_y = diff_y.mean()
+                mean_diff_z = diff_z.mean()
+
+                # Determine if y is aligned with gravity
+                y_aligned_with_gravity = abs(mean_diff_y - 9.8) < abs(mean_diff_z - 9.8)
 
                 # Process the accelerometer data
                 aggregated_acc_df, mean_acc, stdev_acc = process_csv(accelerometer_path, y_aligned_with_gravity)
@@ -129,19 +145,18 @@ for base_path in base_paths:
                 all_stdev_values[folder] = {"Accelerometer": stdev_acc}
                 all_dataframes[folder] = {"Accelerometer": aggregated_acc_df}
 
+                # Process the linear accelerometer data
+                aggregated_lin_acc_df, mean_lin_acc, stdev_lin_acc = process_csv(linear_path, y_aligned_with_gravity)
+                all_mean_values[folder]["Linear Accelerometer"] = mean_lin_acc
+                all_stdev_values[folder]["Linear Accelerometer"] = stdev_lin_acc
+                all_dataframes[folder]["Linear Accelerometer"] = aggregated_lin_acc_df
+
             if os.path.exists(gyroscope_path):
                 # Process the Gyroscope.csv file
                 aggregated_gyro_df, mean_gyro, stdev_gyro = process_csv(gyroscope_path, y_aligned_with_gravity)
                 all_mean_values[folder]["Gyroscope"] = mean_gyro
                 all_stdev_values[folder]["Gyroscope"] = stdev_gyro
                 all_dataframes[folder]["Gyroscope"] = aggregated_gyro_df
-
-            if linear_path is not None:
-                # Process the Linear Accelerometer.csv file
-                aggregated_lin_acc_df, mean_lin_acc, stdev_lin_acc = process_csv(linear_path, y_aligned_with_gravity)
-                all_mean_values[folder]["Linear Accelerometer"] = mean_lin_acc
-                all_stdev_values[folder]["Linear Accelerometer"] = stdev_lin_acc
-                all_dataframes[folder]["Linear Accelerometer"] = aggregated_lin_acc_df
 
             # Extract mode of transportation
             mode = folder.split('_')[0]
@@ -160,12 +175,7 @@ for base_path in base_paths:
                 if "Time_interval" in df.columns:
                     df.drop(columns=["Time_interval"], inplace=True)
                 # Change column names based on the data type
-                if data_type == "Accelerometer":
-                    df.columns = ["Time (s)", "X", "Y", "Z"]
-                elif data_type == "Gyroscope":
-                    df.columns = ["Time (s)", "X", "Y", "Z"]
-                elif data_type == "Linear Accelerometer":
-                    df.columns = ["Time (s)", "X", "Y", "Z"]
+                df.columns = ["Time (s)", "X", "Y", "Z"]
 
                 # Save the DataFrame to CSV within the instance folder
                 filename = f"{data_type}.csv"
