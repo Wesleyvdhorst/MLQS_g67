@@ -48,8 +48,8 @@ def plot_grouped_by_mode(show_plots=True, filtered=True):
 
     for mode in mean_values_by_mode:
         for data_type in mean_values_by_mode[mode]:
-            mean_values = mean_values_by_mode[mode][data_type]
-            stdev_values = stdev_values_by_mode[mode][data_type]
+            mean_values = mean_values_by_mode[mode][data_type].drop("Time (s)")
+            stdev_values = stdev_values_by_mode[mode][data_type].drop("Time (s)")
 
             plt.figure(figsize=(14, 6))
 
@@ -62,6 +62,48 @@ def plot_grouped_by_mode(show_plots=True, filtered=True):
 
             plt.tight_layout()
             plt.show()
+
+
+def plot_all_modes_by_measurement(show_plots=True, filtered=True):
+    if not show_plots:
+        return
+
+    measurements = ["Accelerometer", "Gyroscope", "Linear Accelerometer"]
+
+    for measurement in measurements:
+        fig, axs = plt.subplots(1, 3, figsize=(20, 6), sharey=True)
+        fig.suptitle(
+            f'Mean and Standard Deviation of {"Filtered" if filtered else "Original"} {measurement} for All Modes')
+
+        axes_labels = ["X", "Y", "Z"]
+        bar_width = 0.2
+        mode_names = list(mean_values_by_mode.keys())
+
+        for i, axis in enumerate(axes_labels):
+            index = np.arange(len(mode_names))
+
+            for j, mode in enumerate(mode_names):
+                mean_values = mean_values_by_mode[mode].get(measurement)
+                stdev_values = stdev_values_by_mode[mode].get(measurement)
+
+                if mean_values is not None and stdev_values is not None:
+                    mean_values = mean_values.drop("Time (s)")
+                    stdev_values = stdev_values.drop("Time (s)")
+
+                    if axis in mean_values.index:
+                        axs[i].bar(index + j * bar_width, mean_values[axis], yerr=stdev_values[axis], capsize=5,
+                                   label=mode if i == 0 else "", width=bar_width, alpha=0.6)
+
+            axs[i].set_xlabel('Mode')
+            axs[i].set_ylabel(f'{axis} Acceleration (m/s^2)')
+            axs[i].set_xticks(index + bar_width * (len(mode_names) - 1) / 2)
+            axs[i].set_xticklabels(mode_names, rotation=45)
+            axs[i].grid(True)
+            axs[i].legend(loc='upper right')
+
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.show()
+
 
 # Function to provide data insights
 def provide_data_insights():
@@ -80,7 +122,8 @@ def provide_data_insights():
             print("-" * 50)
 
 # Example calls to the functions
-plot_grouped_by_mode(show_plots=False, filtered=True)
+plot_grouped_by_mode(show_plots=True, filtered=True)
+plot_all_modes_by_measurement(show_plots=False, filtered=True)
 provide_data_insights()
 
 # Define the paths to the filtered CSV files

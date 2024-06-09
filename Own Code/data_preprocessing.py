@@ -3,6 +3,7 @@ import numpy as np
 import os
 from filterpy.kalman import KalmanFilter
 
+
 # Define the path to the data directory
 base_paths = ["Data_Arthur", "Data_Nando"]
 filtered_data_path = "Data_Filtered"
@@ -10,6 +11,7 @@ filtered_data_path = "Data_Filtered"
 # Create the filtered data directory if it doesn't exist
 if not os.path.exists(filtered_data_path):
     os.makedirs(filtered_data_path)
+
 
 # Function to apply a Kalman filter to the data
 def apply_kalman_filter(df):
@@ -27,7 +29,7 @@ def apply_kalman_filter(df):
         kf.R = 5  # Measurement noise
         kf.Q = 0.1  # Process noise
 
-    # Apply the Kalman filter to each acceleration component
+    # Apply the Kalman filter to each component
     filtered_x = []
     filtered_y = []
     filtered_z = []
