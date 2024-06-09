@@ -121,18 +121,8 @@ def provide_data_insights():
             print(stdev_values)
             print("-" * 50)
 
-# Example calls to the functions
-plot_grouped_by_mode(show_plots=True, filtered=True)
-plot_all_modes_by_measurement(show_plots=False, filtered=True)
-provide_data_insights()
 
-# Define the paths to the filtered CSV files
-auto_1_path = os.path.join("Data_Filtered", "auto_1")
-auto_horizontaal_path = os.path.join("Data_Arthur", "auto_horizontaal")
-
-
-# Function to plot the time series data
-def plot_time_series(folder_path, label):
+def plot_time_series(folder_path, label, interval_start=0, interval_end=30):
     # Load the CSV files for Accelerometer, Gyroscope, and Linear Accelerometer
     accelerometer_df = pd.read_csv(os.path.join(folder_path, "Accelerometer.csv"))
     gyroscope_df = pd.read_csv(os.path.join(folder_path, "Gyroscope.csv"))
@@ -141,17 +131,24 @@ def plot_time_series(folder_path, label):
     # Extract data from the dataframes
     time = accelerometer_df.iloc[:, 0]
 
+    # Find the indices corresponding to the specified time interval
+    start_idx = (time - interval_start).abs().idxmin()
+    end_idx = (time - interval_end).abs().idxmin()
+
+    # Extract the data for the specified interval
+    time_interval = time[start_idx:end_idx]
+
     # Extract accelerometer data
-    x_accelerometer = accelerometer_df.iloc[:, 1]
-    y_accelerometer = accelerometer_df.iloc[:, 2]
-    z_accelerometer = accelerometer_df.iloc[:, 3]
+    x_accelerometer = accelerometer_df.iloc[start_idx:end_idx, 1]
+    y_accelerometer = accelerometer_df.iloc[start_idx:end_idx, 2]
+    z_accelerometer = accelerometer_df.iloc[start_idx:end_idx, 3]
 
     # Plot accelerometer data
     plt.figure(figsize=(12, 8))
 
     # Accelerometer X
     plt.subplot(3, 1, 1)
-    plt.plot(time, x_accelerometer, label="X")
+    plt.plot(time_interval, x_accelerometer, label="X")
     plt.title(f"Accelerometer X Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -160,7 +157,7 @@ def plot_time_series(folder_path, label):
 
     # Accelerometer Y
     plt.subplot(3, 1, 2)
-    plt.plot(time, y_accelerometer, label="Y")
+    plt.plot(time_interval, y_accelerometer, label="Y")
     plt.title(f"Accelerometer Y Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -169,7 +166,7 @@ def plot_time_series(folder_path, label):
 
     # Accelerometer Z
     plt.subplot(3, 1, 3)
-    plt.plot(time, z_accelerometer, label="Z")
+    plt.plot(time_interval, z_accelerometer, label="Z")
     plt.title(f"Accelerometer Z Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -180,16 +177,16 @@ def plot_time_series(folder_path, label):
     plt.show()
 
     # Extract gyroscope data
-    x_gyroscope = gyroscope_df.iloc[:, 1]
-    y_gyroscope = gyroscope_df.iloc[:, 2]
-    z_gyroscope = gyroscope_df.iloc[:, 3]
+    x_gyroscope = gyroscope_df.iloc[start_idx:end_idx, 1]
+    y_gyroscope = gyroscope_df.iloc[start_idx:end_idx, 2]
+    z_gyroscope = gyroscope_df.iloc[start_idx:end_idx, 3]
 
     # Plot gyroscope data
     plt.figure(figsize=(12, 8))
 
     # Gyroscope X
     plt.subplot(3, 1, 1)
-    plt.plot(time, x_gyroscope, label="X")
+    plt.plot(time_interval, x_gyroscope, label="X")
     plt.title(f"Gyroscope X Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Angular Velocity")
@@ -198,7 +195,7 @@ def plot_time_series(folder_path, label):
 
     # Gyroscope Y
     plt.subplot(3, 1, 2)
-    plt.plot(time, y_gyroscope, label="Y")
+    plt.plot(time_interval, y_gyroscope, label="Y")
     plt.title(f"Gyroscope Y Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Angular Velocity")
@@ -207,7 +204,7 @@ def plot_time_series(folder_path, label):
 
     # Gyroscope Z
     plt.subplot(3, 1, 3)
-    plt.plot(time, z_gyroscope, label="Z")
+    plt.plot(time_interval, z_gyroscope, label="Z")
     plt.title(f"Gyroscope Z Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Angular Velocity")
@@ -218,16 +215,16 @@ def plot_time_series(folder_path, label):
     plt.show()
 
     # Extract linear accelerometer data
-    x_linear_accelerometer = linear_accelerometer_df.iloc[:, 1]
-    y_linear_accelerometer = linear_accelerometer_df.iloc[:, 2]
-    z_linear_accelerometer = linear_accelerometer_df.iloc[:, 3]
+    x_linear_accelerometer = linear_accelerometer_df.iloc[start_idx:end_idx, 1]
+    y_linear_accelerometer = linear_accelerometer_df.iloc[start_idx:end_idx, 2]
+    z_linear_accelerometer = linear_accelerometer_df.iloc[start_idx:end_idx, 3]
 
     # Plot linear accelerometer data
     plt.figure(figsize=(12, 8))
 
     # Linear Accelerometer X
     plt.subplot(3, 1, 1)
-    plt.plot(time, x_linear_accelerometer, label="X")
+    plt.plot(time_interval, x_linear_accelerometer, label="X")
     plt.title(f"Linear Accelerometer X Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -236,7 +233,7 @@ def plot_time_series(folder_path, label):
 
     # Linear Accelerometer Y
     plt.subplot(3, 1, 2)
-    plt.plot(time, y_linear_accelerometer, label="Y")
+    plt.plot(time_interval, y_linear_accelerometer, label="Y")
     plt.title(f"Linear Accelerometer Y Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -245,7 +242,7 @@ def plot_time_series(folder_path, label):
 
     # Linear Accelerometer Z
     plt.subplot(3, 1, 3)
-    plt.plot(time, z_linear_accelerometer, label="Z")
+    plt.plot(time_interval, z_linear_accelerometer, label="Z")
     plt.title(f"Linear Accelerometer Z Time Series Data for {label}")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
@@ -255,10 +252,18 @@ def plot_time_series(folder_path, label):
     plt.tight_layout()
     plt.show()
 
+# Example calls to the functions
+plot_grouped_by_mode(show_plots=False, filtered=True)
+plot_all_modes_by_measurement(show_plots=False, filtered=True)
+provide_data_insights()
 
-#
-# # Plot the time series data for auto_1
-# plot_time_series(auto_1_path, "auto_1")
-#
+# Define the paths to the filtered CSV files
+auto_1_path = os.path.join("Data_Filtered", "auto_1")
+auto_2_path = os.path.join("Data_Filtered", "lopen_1")
+auto_horizontaal_path = os.path.join("Data_Arthur", "auto_horizontaal")
+
+plot_time_series(auto_1_path, "auto_1", interval_start=0, interval_end=30)
+plot_time_series(auto_2_path, "fiets_2", interval_start=0, interval_end=30)
+
 # # Plot the time series data for auto_horizontaal
 # plot_time_series(auto_horizontaal_path, "auto_horizontaal")

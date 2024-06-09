@@ -79,8 +79,14 @@ def process_csv(file_path, y_aligned_with_gravity):
     # Define the time intervals for aggregation (every half second)
     df['Time_interval'] = (df['Time'] // 0.5).astype(int)
 
+    # Calculate the total time in seconds
+    total_time = df['Time'].max()
+
+    # Remove the first and last 10 seconds of data
+    df_filtered = df[(df['Time'] > 10) & (df['Time'] < total_time - 10)]
+
     # Aggregate the data for every half second using the mean
-    aggregated_df = df.groupby('Time_interval').mean().reset_index()
+    aggregated_df = df_filtered.groupby('Time_interval').mean().reset_index()
 
     # Calculate mean and standard deviation of the aggregated values
     mean_values = aggregated_df.mean()
