@@ -49,7 +49,6 @@ def statistical_features(df, window_size=10):
 
 def frequency_features(df):
     for ax in ['X', 'Y', 'Z']:
-
         # Apply FFT
         fft_values = fft(df[ax].values)
         df[f'{ax}_fft'] = np.abs(fft_values)
@@ -62,19 +61,22 @@ def frequency_features(df):
     return df
 
 
-def feature_engineering(file_path):
+def feature_engineering(file_path, sensor):
     filtered_df = pd.read_csv(file_path)
 
-    # Create Statistical Features
-    filtered_df = statistical_features(filtered_df)
-
     # Create PCA Features
-    filtered_df = pca_features(filtered_df, n_components=3)
+    pca_df = pca_features(filtered_df.copy(), n_components=3)
+    all_dataframes[folder][sensor]['pca'] = pca_df
+
+    # Create Statistical Features
+    pca_time_df = statistical_features(pca_df.copy())
+    all_dataframes[folder][sensor]['pca_time'] = pca_time_df
 
     # Create Frequency Features (Fourier Transformation)
-    filtered_df = frequency_features(filtered_df)
+    pca_time_freq_df = frequency_features(pca_time_df.copy())
+    all_dataframes[folder][sensor]['pca_time_freq'] = pca_time_freq_df
 
-    return filtered_df
+    return pca_time_freq_df
 
 
 for folder in os.listdir(filtered_data_path):
@@ -94,16 +96,13 @@ for folder in os.listdir(filtered_data_path):
         # Initialize the dictionary for the current folder if not already initialized
         if folder not in all_dataframes:
             all_dataframes[folder] = {}
+            for sensor in sensor_types:
+                all_dataframes[folder][sensor] = {}
 
         # Apply Feature Engineering
-        feature_acc_df = feature_engineering(accelerometer_path)
-        all_dataframes[folder][sensor_types[0]] = feature_acc_df
-
-        feature_gyro_df = feature_engineering(gyroscope_path)
-        all_dataframes[folder][sensor_types[1]] = feature_gyro_df
-
-        feature_linear_df = feature_engineering(linear_path)
-        all_dataframes[folder][sensor_types[2]] = feature_linear_df
+        feature_engineering(accelerometer_path, sensor_types[0])
+        feature_engineering(gyroscope_path, sensor_types[1])
+        feature_engineering(linear_path, sensor_types[2])
 
         # Create a folder for the instance
         instance_folder = os.path.join(feature_data_path, f"{mode}_{mode_counts[mode]}")
@@ -111,7 +110,8 @@ for folder in os.listdir(filtered_data_path):
             os.makedirs(instance_folder)
 
         # Save each DataFrame to CSV within the instance folder
-        for data_type, feature_df in all_dataframes[folder].items():
-            filename = f"{data_type}.csv"
-            save_path = os.path.join(instance_folder, filename)
-            feature_df.to_csv(save_path, index=False)
+        for sensor in sensor_types:
+            for step, feature_df in all_dataframes[folder][sensor].items():
+                filename = f"{sensor}_{step}.csv"
+                save_path = os.path.join(instance_folder, filename)
+                feature_df.to_csv(save_path, index=False)
