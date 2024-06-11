@@ -3,7 +3,6 @@ import numpy as np
 import os
 from filterpy.kalman import KalmanFilter
 
-
 # Define the path to the data directory
 base_paths = ["Data_Arthur", "Data_Nando"]
 filtered_data_path = "Data_Filtered"
@@ -93,6 +92,7 @@ def process_csv(file_path, y_aligned_with_gravity):
     stdev_values = aggregated_df.std()
 
     return aggregated_df, mean_values, stdev_values
+
 
 # Initialize dictionaries to store results
 all_mean_values = {}
