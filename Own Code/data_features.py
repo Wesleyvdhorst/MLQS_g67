@@ -34,6 +34,8 @@ def statistical_features(df, window_size=10):
     # Moving window feature calculation
     for ax in ['X', 'Y', 'Z']:
         df[f'temp_{ax}_mean'] = df[ax].rolling(window=window_size).mean()
+        df[f'temp_{ax}_max'] = df[ax].rolling(window=window_size).max()
+        df[f'temp_{ax}_min'] = df[ax].rolling(window=window_size).min()
         df[f'temp_{ax}_std'] = df[ax].rolling(window=window_size).std()
         df[f'temp_{ax}_median'] = df[ax].rolling(window=window_size).median()
         df[f'temp_{ax}_sum'] = df[ax].rolling(window=window_size).sum()
@@ -53,10 +55,9 @@ def frequency_features(df):
         fft_values = fft(df[ax].values)
         df[f'{ax}_fft'] = np.abs(fft_values)
 
-        # Extract specific frequency domain features
-        df[f'{ax}_dominant_freq'] = np.argmax(np.abs(fft_values))
-        df[f'{ax}_spectral_energy'] = np.sum(np.abs(fft_values) ** 2)
-        df[f'{ax}_spectral_entropy'] = -np.sum(np.abs(fft_values) * np.log(np.abs(fft_values)))
+        # Extract specific frequency features
+        df[f'{ax}_highest_freq'] = np.argmax(np.abs(fft_values))
+        df[f'{ax}_power_spectrum_entropy'] = -np.sum(np.abs(fft_values) ** 2 * np.log(np.abs(fft_values) ** 2))
 
     return df
 
