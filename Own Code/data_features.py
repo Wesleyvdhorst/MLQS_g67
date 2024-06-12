@@ -1,8 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.decomposition import PCA
+from scipy.fft import fft
 
 sensor_types = ['Accelerometer', 'Gyroscope', 'Linear Accelerometer']
 filtered_data_path = "Data_Filtered"
@@ -22,13 +22,16 @@ mode_counts = {}
 all_dataframes = {}
 
 
-def feature_engineering(file_path):
-    df = pd.read_csv(file_path)
+def pca_features(df, n_components=3):
+    pca = PCA(n_components=n_components)
+    pca_result = pca.fit_transform(df[['X', 'Y', 'Z']])
+    for i in range(1, n_components + 1):
+        df[f'pca{i}'] = pca_result[:, i - 1]
+    return df
 
-    # Calculate rolling mean over a 10-second window
-    window_size = 10  # 10 seconds window
 
-    # Rolling mean calculation
+def statistical_features(df, window_size=10):
+    # Moving window feature calculation
     for ax in ['X', 'Y', 'Z']:
         df[f'temp_{ax}_mean'] = df[ax].rolling(window=window_size).mean()
         df[f'temp_{ax}_std'] = df[ax].rolling(window=window_size).std()
@@ -42,6 +45,38 @@ def feature_engineering(file_path):
         df[f'{ax}_lag2'] = df[ax].shift(2)
 
     return df
+
+
+def frequency_features(df):
+    for ax in ['X', 'Y', 'Z']:
+        # Apply FFT
+        fft_values = fft(df[ax].values)
+        df[f'{ax}_fft'] = np.abs(fft_values)
+
+        # Extract specific frequency domain features
+        df[f'{ax}_dominant_freq'] = np.argmax(np.abs(fft_values))
+        df[f'{ax}_spectral_energy'] = np.sum(np.abs(fft_values) ** 2)
+        df[f'{ax}_spectral_entropy'] = -np.sum(np.abs(fft_values) * np.log(np.abs(fft_values)))
+
+    return df
+
+
+def feature_engineering(file_path, sensor):
+    filtered_df = pd.read_csv(file_path)
+
+    # Create PCA Features
+    pca_df = pca_features(filtered_df.copy(), n_components=3)
+    all_dataframes[folder][sensor]['pca'] = pca_df
+
+    # Create Statistical Features
+    pca_time_df = statistical_features(pca_df.copy())
+    all_dataframes[folder][sensor]['pca_time'] = pca_time_df
+
+    # Create Frequency Features (Fourier Transformation)
+    pca_time_freq_df = frequency_features(pca_time_df.copy())
+    all_dataframes[folder][sensor]['pca_time_freq'] = pca_time_freq_df
+
+    return pca_time_freq_df
 
 
 for folder in os.listdir(filtered_data_path):
@@ -61,16 +96,13 @@ for folder in os.listdir(filtered_data_path):
         # Initialize the dictionary for the current folder if not already initialized
         if folder not in all_dataframes:
             all_dataframes[folder] = {}
+            for sensor in sensor_types:
+                all_dataframes[folder][sensor] = {}
 
         # Apply Feature Engineering
-        feature_acc = feature_engineering(accelerometer_path)
-        all_dataframes[folder][sensor_types[0]] = feature_acc
-
-        feature_gyro = feature_engineering(gyroscope_path)
-        all_dataframes[folder][sensor_types[1]] = feature_gyro
-
-        feature_linear = feature_engineering(linear_path)
-        all_dataframes[folder][sensor_types[2]] = feature_linear
+        feature_engineering(accelerometer_path, sensor_types[0])
+        feature_engineering(gyroscope_path, sensor_types[1])
+        feature_engineering(linear_path, sensor_types[2])
 
         # Create a folder for the instance
         instance_folder = os.path.join(feature_data_path, f"{mode}_{mode_counts[mode]}")
@@ -78,7 +110,8 @@ for folder in os.listdir(filtered_data_path):
             os.makedirs(instance_folder)
 
         # Save each DataFrame to CSV within the instance folder
-        for data_type, df in all_dataframes[folder].items():
-            filename = f"{data_type}.csv"
-            save_path = os.path.join(instance_folder, filename)
-            df.to_csv(save_path, index=False)
+        for sensor in sensor_types:
+            for step, feature_df in all_dataframes[folder][sensor].items():
+                filename = f"{sensor}_{step}.csv"
+                save_path = os.path.join(instance_folder, filename)
+                feature_df.to_csv(save_path, index=False)
