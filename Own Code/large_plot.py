@@ -3,10 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def calculate_stats(df):
     mean_values = df.mean()
     stdev_values = df.std()
     return mean_values, stdev_values
+
 
 def process_csv_files(folder_path):
     stats = {}
@@ -18,6 +20,7 @@ def process_csv_files(folder_path):
             mean_values, stdev_values = calculate_stats(df)
             stats[file_name] = (mean_values, stdev_values)
     return stats
+
 
 def plot_stats(stats_by_folder, measurement, filtered=True):
     fig, axs = plt.subplots(1, 3, figsize=(20, 6), sharey=True)
@@ -48,6 +51,7 @@ def plot_stats(stats_by_folder, measurement, filtered=True):
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
+
 def process_data_filtered_folder(data_filtered_path, limit=3):
     stats_by_folder = {}
     count = 0
@@ -62,6 +66,7 @@ def process_data_filtered_folder(data_filtered_path, limit=3):
 
     return stats_by_folder
 
+
 def visualize_data_filtered(data_filtered_path, show_plots=True, filtered=True):
     if not show_plots:
         return
@@ -70,6 +75,7 @@ def visualize_data_filtered(data_filtered_path, show_plots=True, filtered=True):
 
     for measurement in ["Accelerometer.csv", "Gyroscope.csv", "Linear Accelerometer.csv"]:
         plot_stats(stats_by_folder, measurement, filtered)
+
 
 # Example usage
 data_filtered_path = "Data_Filtered"
