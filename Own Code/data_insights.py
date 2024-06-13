@@ -48,8 +48,8 @@ def plot_grouped_by_mode(show_plots=True, filtered=True):
 
     for mode in mean_values_by_mode:
         for data_type in mean_values_by_mode[mode]:
-            mean_values = mean_values_by_mode[mode][data_type].drop("Time (s)")
-            stdev_values = stdev_values_by_mode[mode][data_type].drop("Time (s)")
+            mean_values = mean_values_by_mode[mode][data_type].drop("Time (s)", errors='ignore')
+            stdev_values = stdev_values_by_mode[mode][data_type].drop("Time (s)", errors='ignore')
 
             plt.figure(figsize=(14, 6))
 
@@ -87,8 +87,8 @@ def plot_all_modes_by_measurement(show_plots=True, filtered=True):
                 stdev_values = stdev_values_by_mode[mode].get(measurement)
 
                 if mean_values is not None and stdev_values is not None:
-                    mean_values = mean_values.drop("Time (s)")
-                    stdev_values = stdev_values.drop("Time (s)")
+                    mean_values = mean_values.drop("Time (s)", errors='ignore')
+                    stdev_values = stdev_values.drop("Time (s)", errors='ignore')
 
                     if axis in mean_values.index:
                         axs[i].bar(index + j * bar_width, mean_values[axis], yerr=stdev_values[axis], capsize=5,
@@ -252,18 +252,52 @@ def plot_time_series(folder_path, label, interval_start=0, interval_end=30):
     plt.tight_layout()
     plt.show()
 
+# Function to plot mean and standard deviation for a specified folder
+def plot_mean_stdev_for_folder(folder_path, show_plots=True):
+    if not show_plots:
+        return
+
+    folder_name = os.path.basename(folder_path)
+    mode = get_mode_of_transportation(folder_name)
+    data_files = ["Accelerometer.csv", "Gyroscope.csv", "Linear Accelerometer.csv"]
+
+    for data_file in data_files:
+        file_path = os.path.join(folder_path, data_file)
+        if os.path.isfile(file_path):
+            data_type = data_file.split('.')[0]
+            df = pd.read_csv(file_path)
+            mean_values = df.mean().drop("Time (s)", errors='ignore')
+            stdev_values = df.std().drop("Time (s)", errors='ignore')
+
+            plt.figure(figsize=(14, 6))
+
+            plt.bar(mean_values.index, mean_values.values, yerr=stdev_values.values, capsize=5, color='b', alpha=0.6)
+            plt.ylabel('Values')
+            plt.xlabel('Axis')
+            plt.title(f'Mean and Standard Deviation of {data_type} for {mode}')
+            plt.xticks(rotation=45)
+            plt.grid(True)
+
+            plt.tight_layout()
+            plt.show()
+
 # Example calls to the functions
 plot_grouped_by_mode(show_plots=False, filtered=True)
 plot_all_modes_by_measurement(show_plots=False, filtered=True)
 provide_data_insights()
 
 # Define the paths to the filtered CSV files
-auto_1_path = os.path.join("Data_Filtered", "auto_1")
-auto_2_path = os.path.join("Data_Filtered", "lopen_1")
+auto_1_path = os.path.join("Data_Filtered", "bus_1")
+auto_2_path = os.path.join("Data_Filtered", "bus_2")
 auto_horizontaal_path = os.path.join("Data_Arthur", "auto_horizontaal")
 
-plot_time_series(auto_1_path, "auto_1", interval_start=0, interval_end=30)
-plot_time_series(auto_2_path, "fiets_2", interval_start=0, interval_end=30)
-
+# plot_time_series(auto_1_path, "auto_1", interval_start=0, interval_end=30)
+# plot_time_series(auto_2_path, "fiets_2", interval_start=0, interval_end=30)
+#
 # # Plot the time series data for auto_horizontaal
 # plot_time_series(auto_horizontaal_path, "auto_horizontaal")
+
+# Plot mean and standard deviation for a specified folder
+plot_mean_stdev_for_folder(auto_1_path)
+plot_mean_stdev_for_folder(auto_2_path)
+
