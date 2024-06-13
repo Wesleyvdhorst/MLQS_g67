@@ -7,6 +7,7 @@ from scipy.fft import fft
 sensor_types = ['Accelerometer', 'Gyroscope', 'Linear Accelerometer']
 filtered_data_path = "Data_Filtered"
 feature_data_path = "Data_Features"
+window_size = 10
 
 # Create the filtered data directory if it doesn't exist
 if not os.path.exists(feature_data_path):
@@ -30,10 +31,12 @@ def pca_features(df, n_components=3):
     return df
 
 
-def statistical_features(df, window_size=10):
+def statistical_features(df):
     # Moving window feature calculation
     for ax in ['X', 'Y', 'Z']:
         df[f'temp_{ax}_mean'] = df[ax].rolling(window=window_size).mean()
+        df[f'temp_{ax}_max'] = df[ax].rolling(window=window_size).max()
+        df[f'temp_{ax}_min'] = df[ax].rolling(window=window_size).min()
         df[f'temp_{ax}_std'] = df[ax].rolling(window=window_size).std()
         df[f'temp_{ax}_median'] = df[ax].rolling(window=window_size).median()
         df[f'temp_{ax}_sum'] = df[ax].rolling(window=window_size).sum()
@@ -47,16 +50,47 @@ def statistical_features(df, window_size=10):
     return df
 
 
+def power_spectrum_entropy(fft_values):
+    power_spectrum = np.abs(fft_values) ** 2
+    power_spectrum /= np.sum(power_spectrum)  # Normalize
+    pse = -np.sum(power_spectrum * np.log(power_spectrum + np.finfo(float).eps))  # Add epsilon to avoid log(0)
+    return pse
+
+
+def spectral_energy(fft_values):
+    return np.sum(np.abs(fft_values) ** 2)
+
+
+def rolling_spectral_features(df, ax):
+    pse_values = []
+    spectral_energy_values = []
+
+    for i in range(len(df) - window_size + 1):
+        fft_values = df[f'{ax}_fft'].iloc[i:i + window_size].values
+        pse = power_spectrum_entropy(fft_values)
+        pse_values.append(pse)
+        se = spectral_energy(fft_values)
+        spectral_energy_values.append(se)
+
+    # Fill the rest with NaN to match the length of the original DataFrame
+    pse_values = [np.nan] * (window_size - 1) + pse_values
+    df[f'{ax}_power_spectrum_entropy'] = pse_values
+    spectral_energy_values = [np.nan] * (window_size - 1) + spectral_energy_values
+    df[f'{ax}_spectral_energy'] = spectral_energy_values
+
+    return df
+
+
 def frequency_features(df):
     for ax in ['X', 'Y', 'Z']:
         # Apply FFT
         fft_values = fft(df[ax].values)
         df[f'{ax}_fft'] = np.abs(fft_values)
 
-        # Extract specific frequency domain features
-        df[f'{ax}_dominant_freq'] = np.argmax(np.abs(fft_values))
-        df[f'{ax}_spectral_energy'] = np.sum(np.abs(fft_values) ** 2)
-        df[f'{ax}_spectral_entropy'] = -np.sum(np.abs(fft_values) * np.log(np.abs(fft_values)))
+        # Extract specific frequency features
+
+        df[f'{ax}_highest_freq'] = df[f'{ax}_fft'].rolling(window=window_size).max()
+        df = rolling_spectral_features(df, ax)
 
     return df
 
