@@ -23,7 +23,7 @@ mode_counts = {}
 all_dataframes = {}
 
 
-def pca_features(df, n_components=3):
+def pca_features(df, n_components=2):
     pca = PCA(n_components=n_components)
     pca_result = pca.fit_transform(df[['X', 'Y', 'Z']])
     for i in range(1, n_components + 1):
@@ -42,6 +42,7 @@ def statistical_features(df):
         df[f'temp_{ax}_sum'] = df[ax].rolling(window=window_size).sum()
         df[f'temp_{ax}_skew'] = df[ax].rolling(window=window_size).skew()
         df[f'temp_{ax}_kurt'] = df[ax].rolling(window=window_size).kurt()
+        df[f'temp_{ax}_exp_avg'] = df[ax].ewm(span=window_size, adjust=False).mean()
 
         # Calculate lag features
         df[f'{ax}_lag1'] = df[ax].shift(1)
@@ -74,9 +75,9 @@ def rolling_spectral_features(df, ax):
 
     # Fill the rest with NaN to match the length of the original DataFrame
     pse_values = [np.nan] * (window_size - 1) + pse_values
-    df[f'{ax}_power_spectrum_entropy'] = pse_values
+    df[f'temp_{ax}_power_spectrum_entropy'] = pse_values
     spectral_energy_values = [np.nan] * (window_size - 1) + spectral_energy_values
-    df[f'{ax}_spectral_energy'] = spectral_energy_values
+    df[f'temp_{ax}_spectral_energy'] = spectral_energy_values
 
     return df
 
@@ -89,7 +90,7 @@ def frequency_features(df):
 
         # Extract specific frequency features
 
-        df[f'{ax}_highest_freq'] = df[f'{ax}_fft'].rolling(window=window_size).max()
+        df[f'temp_{ax}_highest_freq'] = df[f'{ax}_fft'].rolling(window=window_size).max()
         df = rolling_spectral_features(df, ax)
 
     return df
@@ -99,7 +100,7 @@ def feature_engineering(file_path, sensor):
     filtered_df = pd.read_csv(file_path)
 
     # Create PCA Features
-    pca_df = pca_features(filtered_df.copy(), n_components=3)
+    pca_df = pca_features(filtered_df.copy(), n_components=2)
     all_dataframes[folder][sensor]['pca'] = pca_df
 
     # Create Statistical Features
