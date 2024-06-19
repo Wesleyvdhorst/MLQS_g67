@@ -10,6 +10,27 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\Own Code\Data_Features\auto_1\Accelerometer_pca.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Own Code\Data_Features\auto_1\Accelerometer_pca_time.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Own Code\Data_Features\auto_1\Accelerometer_pca_time_freq.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\Own Code\Data_Nando\lopen_horizontaal_0506-1212\Accelerometer.csv">
           <value>
             <Attribute>
@@ -32,6 +53,27 @@
           </value>
         </entry>
         <entry key="\Own Code\Data_Nando\tram_horizontaal_achterstevoren_0606-2355\Linear Acceleration.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Own Code\Sets\pca\test_data_pca.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Own Code\Sets\pca_time_freq\test_data_pca_time_freq.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\Own Code\Sets\pca_time_freq\val_data_pca_time_freq.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
